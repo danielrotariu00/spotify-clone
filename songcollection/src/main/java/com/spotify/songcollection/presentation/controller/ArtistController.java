@@ -1,15 +1,17 @@
 package com.spotify.songcollection.presentation.controller;
 
 import com.spotify.songcollection.business.model.ArtistDTO;
+import com.spotify.songcollection.business.model.GetArtistsDTO;
 import com.spotify.songcollection.business.service.ArtistService;
+import com.spotify.songcollection.business.service.ArtistSongService;
 import com.spotify.songcollection.business.service.IdmClient;
 import com.spotify.songcollection.business.util.exception.NotFoundException;
-import org.springframework.hateoas.Link;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,48 +22,44 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
-import java.util.List;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @Validated
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping(value = "/api/songcollection/artists", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ArtistController {
 
     private final ArtistService artistService;
+    private final ArtistSongService artistSongService;
     private final IdmClient idmClient;
 
-    public ArtistController(ArtistService artistService, IdmClient idmClient) {
+    public ArtistController(
+            ArtistService artistService,
+            ArtistSongService artistSongService,
+            IdmClient idmClient
+    ) {
         this.artistService = artistService;
+        this.artistSongService = artistSongService;
         this.idmClient = idmClient;
     }
 
     @GetMapping
-    public ResponseEntity<List<ArtistDTO>> getAllArtists(@RequestParam(required = false) String name,
-                                                         @RequestParam(defaultValue = "false") Boolean exactMatch) {
-        List<ArtistDTO> artists = artistService.findAll(name, exactMatch);
-        // todo: move links to mapper
-        for (final ArtistDTO artist : artists) {
-            Link selfLink = linkTo(methodOn(ArtistController.class)
-                    .getArtist(artist.getId())).withSelfRel();
-            Link parentLink = linkTo(methodOn(ArtistController.class)
-                    .getAllArtists(name, exactMatch)).withRel("parent");
-
-            artist.add(selfLink);
-            artist.add(parentLink);
-        }
-
-        return new ResponseEntity<>(artists, HttpStatus.OK);
+    public ResponseEntity<GetArtistsDTO> getAllArtists(
+            @RequestParam(required = false) @Size(max = 32) String name,
+            @RequestParam(defaultValue = "false") Boolean exactMatch,
+            @RequestParam(required = false) @Min(0) Integer page,
+            @RequestParam(defaultValue = "10") @Min(0) Integer maxItems
+    ) {
+        return new ResponseEntity<>(artistService.findAll(name, exactMatch, page, maxItems), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ArtistDTO> getArtist(@PathVariable Integer id) {
-        return ResponseEntity.ok(artistService.get(id));
+    public ResponseEntity<ArtistDTO> getArtist(@PathVariable @Min(0) Integer id) {
+        return new ResponseEntity<>(artistService.get(id), HttpStatus.OK);
     }
 
     @PutMapping(value = "/{id}")
@@ -82,21 +80,23 @@ public class ArtistController {
             ArtistDTO artist = artistService.save(id, artistDTO);
 
             return new ResponseEntity<>(artist, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
         }
+
+        return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
     }
 
+    @Transactional
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteArtist(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                             @PathVariable Integer id) {
+                                             @PathVariable @Min(0) Integer id) {
         String token = authorizationHeader.split(" ")[1];
 
         if (idmClient.isContentManager(token)) {
+            artistSongService.deleteAllByArtistId(id);
             artistService.delete(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
         }
+
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 }

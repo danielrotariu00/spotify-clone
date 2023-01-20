@@ -1,5 +1,6 @@
 package com.spotify.songcollection.business.model;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -24,10 +25,12 @@ public class SongDTO extends RepresentationModel<SongDTO> {
     private Genre genre;
 
     @NotNull
+    @Min(0)
     private Integer year;
 
     @NotNull
     private Type type;
 
+    @Min(0)
     private Integer parent;
 }

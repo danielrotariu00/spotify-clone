@@ -7,11 +7,12 @@ import com.spotify.idm.AuthorizeRequest;
 
 import java.util.List;
 
+import static com.spotify.songcollection.business.util.Constants.ARTIST_ROLE_ID;
+import static com.spotify.songcollection.business.util.Constants.CONTENT_MANAGER_ROLE_ID;
+
 public class IdmClient extends WebServiceGatewaySupport {
     private static final String URI = "http://localhost:8080/ws/users";
     private static final String AUTHORIZE_REQUEST = "http://spotify.com/idm/AuthorizeRequest";
-    private static final Integer CONTENT_MANAGER_ROLE_ID = 3;
-    private static final Integer ARTIST_ROLE_ID = 2;
 
     public boolean isContentManager(String token) {
         AuthorizeRequest request = new AuthorizeRequest();
@@ -34,7 +35,7 @@ public class IdmClient extends WebServiceGatewaySupport {
                 (roleIds.contains(ARTIST_ROLE_ID) && response.getUserId() == artistId);
     }
 
-    private AuthorizeResponse authorize(AuthorizeRequest request) {
+    public AuthorizeResponse authorize(AuthorizeRequest request) {
         return  (AuthorizeResponse) getWebServiceTemplate()
                 .marshalSendAndReceive(URI, request, new SoapActionCallback(AUTHORIZE_REQUEST));
     }

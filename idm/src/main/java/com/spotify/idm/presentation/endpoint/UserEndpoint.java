@@ -24,6 +24,7 @@ import org.jose4j.jwt.MalformedClaimException;
 import org.jose4j.lang.JoseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
@@ -59,6 +60,7 @@ public class UserEndpoint {
 		if (jwtProvider.isAuthorized(request.getToken(), request.getUserId())) {
 			return userService.updatePassword(request);
 		} else {
+			jwtProvider.addToBlacklist(request.getToken());
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 	}
@@ -69,6 +71,7 @@ public class UserEndpoint {
 		if (jwtProvider.hasAdminRights(request.getToken())) {
 			return userService.addRole(request);
 		} else {
+			jwtProvider.addToBlacklist(request.getToken());
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 	}
@@ -79,6 +82,7 @@ public class UserEndpoint {
 		if (jwtProvider.hasAdminRights(request.getToken())) {
 			return userService.deleteRole(request);
 		} else {
+			jwtProvider.addToBlacklist(request.getToken());
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 	}
@@ -89,6 +93,7 @@ public class UserEndpoint {
 		if (jwtProvider.isAuthorized(request.getToken(), request.getUserId())) {
 			return userService.getUser(request);
 		} else {
+			jwtProvider.addToBlacklist(request.getToken());
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 	}
@@ -99,6 +104,7 @@ public class UserEndpoint {
 		if (jwtProvider.hasAdminRights(request.getToken())) {
 			return userService.getUsers();
 		} else {
+			jwtProvider.addToBlacklist(request.getToken());
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 	}
@@ -109,6 +115,7 @@ public class UserEndpoint {
 		if (jwtProvider.isAuthorized(request.getToken(), request.getUserId())) {
 			return userService.deleteUser(request);
 		} else {
+			jwtProvider.addToBlacklist(request.getToken());
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 	}
@@ -120,6 +127,7 @@ public class UserEndpoint {
 		if (jwtProvider.hasAdminRights(request.getToken())) {
 			return userService.getRoles();
 		} else {
+			jwtProvider.addToBlacklist(request.getToken());
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 	}

@@ -10,4 +10,7 @@ import java.util.Optional;
 public interface ArtistSongRepository extends JpaRepository<ArtistSong, Integer> {
     List<ArtistSong> findArtistSongsByArtist_Id(Integer uuid);
     Optional<ArtistSong> findArtistSongByArtist_IdAndSong_Id(Integer uuid, Integer id);
+    boolean existsByArtistIdAndSongId(Integer artistId, Integer songId);
+    void deleteAllByArtistId(Integer artistId);
+    void deleteAllBySongId(Integer songId);
 }

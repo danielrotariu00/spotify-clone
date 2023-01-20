@@ -11,7 +11,6 @@ import org.springframework.hateoas.RepresentationModel;
 @Setter
 public class ArtistDTO extends RepresentationModel<ArtistDTO> {
 
-    @Min(0)
     private Integer id;
 
     @NotNull

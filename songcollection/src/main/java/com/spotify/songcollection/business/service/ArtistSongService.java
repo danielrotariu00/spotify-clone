@@ -36,6 +36,10 @@ public class ArtistSongService {
                 .collect(Collectors.toList());
     }
 
+    public boolean existsByArtistIdAndSongId(Integer artistId, Integer songId) {
+        return artistSongRepository.existsByArtistIdAndSongId(artistId, songId);
+    }
+
     public void create(Integer artistId, Integer songId) {
         Artist artist = artistService.getArtistOrElseThrowException(artistId);
         Song song = songService.getSongOrElseThrowException(songId);
@@ -61,5 +65,13 @@ public class ArtistSongService {
                 .orElseThrow(() -> new NotFoundException(String.format(SONG_NOT_FOUND_MESSAGE, songId)));
 
         artistSongRepository.delete(artistSong);
+    }
+
+    public void deleteAllByArtistId(Integer artistId) {
+        artistSongRepository.deleteAllByArtistId(artistId);
+    }
+
+    public void deleteAllBySongId(Integer songId) {
+        artistSongRepository.deleteAllBySongId(songId);
     }
 }

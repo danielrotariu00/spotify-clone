@@ -73,7 +73,7 @@ public class JwtProvider {
 
     public JwtClaims validate(String jwt) {
         if (blacklist.contains(jwt)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
         try {
@@ -82,6 +82,7 @@ public class JwtProvider {
             if (e.hasExpired()) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
             }
+            blacklist.add(jwt);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
     }
@@ -113,6 +114,10 @@ public class JwtProvider {
 
     private boolean isOwner(JwtClaims claims, Integer userId) throws MalformedClaimException {
         return Objects.equals(claims.getSubject(), String.valueOf(userId));
+    }
+
+    public void addToBlacklist(String jwt) {
+        blacklist.add(jwt);
     }
 
     @Scheduled(fixedRate = 600000)
